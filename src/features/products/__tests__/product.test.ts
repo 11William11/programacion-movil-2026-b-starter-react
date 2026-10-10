@@ -1,55 +1,52 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import {
-  configureProductsService,
-  getProduct,
-  getProducts,
-  ProductsServiceError,
-  resetProductsService,
-} from '../data/products-service';
+import { describe, expect, it } from 'vitest';
+import seedProducts from '../../../../server/data/products.json';
+import { CATEGORIES, formatCOP, LOW_STOCK_THRESHOLD } from '../domain/product';
 
 /**
- * Prueba de ejemplo (ya viene dada) para que `npm test` corra desde el inicio.
- * Muestra el estilo esperado: describe / it / expect, un caso feliz y un caso de error.
+ * Pruebas unitarias de EJEMPLO (ya vienen dadas) para que `npm test` corra desde el inicio.
+ * Muestran el estilo esperado: describe / it / expect, sin red ni pantallas.
  */
-describe('products-service (ejemplo)', () => {
-  afterEach(() => {
-    resetProductsService();
+describe('datos semilla de la API (ejemplo)', () => {
+  it('trae 8 productos con ids 1 a 8', () => {
+    expect(seedProducts).toHaveLength(8);
+    expect(seedProducts.map((item) => item.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
   });
 
-  it('entrega los 8 productos del JSON con todos sus campos', async () => {
-    configureProductsService({ latencyMs: 0 });
-
-    const products = await getProducts();
-
-    expect(products).toHaveLength(8);
-    expect(products[0]).toEqual(
-      expect.objectContaining({
-        id: expect.any(Number),
-        name: expect.any(String),
-        price: expect.any(Number),
-        category: expect.any(String),
-        stock: expect.any(Number),
-      }),
-    );
+  it('usa solo categorías permitidas y stock entero no negativo', () => {
+    for (const item of seedProducts) {
+      expect(CATEGORIES).toContain(item.category);
+      expect(Number.isInteger(item.stock)).toBe(true);
+      expect(item.stock).toBeGreaterThanOrEqual(0);
+    }
   });
 
-  it('falla con el código NETWORK cuando se simula el error', async () => {
-    configureProductsService({ latencyMs: 0, forceError: true });
+  it('incluye productos agotados y con pocas unidades para probar las etiquetas', () => {
+    expect(seedProducts.some((item) => item.stock === 0)).toBe(true);
+    expect(seedProducts.some((item) => item.stock > 0 && item.stock < LOW_STOCK_THRESHOLD)).toBe(true);
+  });
+});
 
-    await expect(getProducts()).rejects.toBeInstanceOf(ProductsServiceError);
-    await expect(getProduct(1)).rejects.toMatchObject({ code: 'NETWORK' });
+describe('formatCOP (ejemplo)', () => {
+  it('separa los miles con punto y antepone el signo de pesos', () => {
+    expect(formatCOP(1250000)).toBe('$ 1.250.000');
+    expect(formatCOP(8500)).toBe('$ 8.500');
+    expect(formatCOP(950)).toBe('$ 950');
   });
 });
 
 /**
- * TODO(Parte 3): agregue sus pruebas aquí (o en archivos nuevos dentro de __tests__/).
- * Mínimo dos: una de `validateProduct` y una de `toProductView`.
+ * TODO(Parte 5): agregue sus pruebas UNITARIAS aquí (o en archivos nuevos dentro de __tests__/).
+ * Mínimo dos de estas funciones del dominio: `validateProduct`, `toProductView` o `filterProducts`.
  * Quite el `.todo` cuando escriba el cuerpo de cada una.
  */
 describe('validateProduct', () => {
-  it.todo('rechaza un nombre vacío y un precio menor o igual que 0');
+  it.todo('rechaza un nombre vacío, un precio menor o igual que 0 y una categoría no permitida');
 });
 
 describe('toProductView', () => {
-  it.todo('formatea el precio y marca las existencias bajas');
+  it.todo('formatea el precio en pesos y marca «Agotado» y «Pocas unidades»');
+});
+
+describe('filterProducts', () => {
+  it.todo('filtra por texto sin distinguir mayúsculas y por categoría exacta');
 });

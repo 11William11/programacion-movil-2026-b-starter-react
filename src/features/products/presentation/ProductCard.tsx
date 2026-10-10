@@ -1,4 +1,4 @@
-import type { ProductView } from '../model/product';
+import type { ProductView } from '../domain/product';
 
 export interface ProductCardProps {
   product: ProductView;
@@ -9,9 +9,10 @@ export interface ProductCardProps {
 /**
  * Tarjeta reutilizable de un producto (se usa en la lista).
  *
- * TODO(Parte 2): construirla con componentes de Ionic (IonItem / IonCard...),
- * mostrando nombre, categoría, precio y un aviso cuando hay pocas unidades
- * o está agotado. Hoy solo muestra el nombre.
+ * TODO(Parte 3): derivarla de `EmptyState.tsx` (mismo estilo de props tipadas) y construirla con
+ * componentes de Ionic (IonItem, IonLabel...), mostrando nombre, categoría, precio y la etiqueta
+ * de stock (`stockLabel`), con un aviso visible cuando hay pocas unidades o está agotado.
+ * Hoy solo muestra el nombre.
  */
 const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) => (
   <div onClick={() => onSelect?.(product.id)}>{product.name}</div>

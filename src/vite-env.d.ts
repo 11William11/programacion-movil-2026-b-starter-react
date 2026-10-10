@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_SIMULATE_ERROR?: string;
+  /** Dirección base de la API (ver .env.example). */
+  readonly VITE_API_URL?: string;
 }

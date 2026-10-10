@@ -2,9 +2,9 @@ import { IonApp, IonRouterOutlet } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { Redirect, Route } from 'react-router-dom';
 
-import ProductDetailPage from '../features/products/ui/ProductDetailPage';
-import ProductFormPage from '../features/products/ui/ProductFormPage';
-import ProductListPage from '../features/products/ui/ProductListPage';
+import ProductDetailPage from '../features/products/presentation/ProductDetailPage';
+import ProductFormPage from '../features/products/presentation/ProductFormPage';
+import ProductListPage from '../features/products/presentation/ProductListPage';
 
 /* CSS base de Ionic (obligatorio) */
 import '@ionic/react/css/core.css';
@@ -24,9 +24,11 @@ const App: React.FC = () => (
       <IonRouterOutlet>
         <Route exact path="/productos" component={ProductListPage} />
         <Route exact path="/productos/nuevo" component={ProductFormPage} />
-        {/* Ionic React Router v5 elige la ÚLTIMA ruta que coincide (no la primera):
-            por eso :id se restringe a dígitos y así "nuevo" no lo activa. */}
+        {/* React Router v5 puede activar la ruta equivocada si dos patrones coinciden
+            (/productos/nuevo también encajaría con /productos/:id). Por eso :id se
+            restringe a dígitos y "nuevo" no lo activa. */}
         <Route exact path="/productos/:id(\d+)" component={ProductDetailPage} />
+        <Route exact path="/productos/:id(\d+)/editar" component={ProductFormPage} />
         <Route exact path="/">
           <Redirect to="/productos" />
         </Route>
