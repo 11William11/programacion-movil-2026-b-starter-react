@@ -27,9 +27,11 @@ npm run build      # revisión de tipos y compilación para producción
 
 La app y la API se ejecutan al mismo tiempo, cada una en su terminal. La app lee la dirección de la API de la variable `VITE_API_URL`: copie `.env.example` como `.env` si necesita cambiarla. El archivo `.env` está ignorado por Git; nunca se versiona.
 
-Rutas de la app, ya creadas como pantallas esqueleto: `/productos` (lista), `/productos/nuevo`, `/productos/:id` (detalle) y `/productos/:id/editar`.
+Para ver la app funcionando se necesitan **dos terminales**: en la primera `npm run server` (API en el puerto 3000) y en la segunda `npm run dev` (app en el puerto 5173). Luego se abre <http://localhost:5173/productos>. Los datos de la API viven en memoria: al reiniciar `npm run server` vuelven a ser los 8 productos semilla.
 
-Hoy la API responde `501 Not implemented` en cada ruta de `/api/products`, y las pantallas muestran un `TODO`. Construir esa funcionalidad es el trabajo del parcial.
+Rutas de la app: `/productos` (lista con búsqueda y filtro por categoría), `/productos/nuevo` (crear), `/productos/:id` (detalle, con editar y eliminar) y `/productos/:id/editar` (editar).
+
+El ejercicio de Kotlin está en `kotlin/Product.kt`; se pega en el [Kotlin Playground](https://play.kotlinlang.org) y se ejecuta con el botón «Run».
 
 ## Flujo de entrega
 
@@ -38,7 +40,7 @@ Hoy la API responde `501 Not implemented` en cada ruta de `/api/products`, y las
 3. Trabaje la lista de [TODO.md](./TODO.md), en orden, con commits pequeños en formato [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): resumen` (por ejemplo, `docs(productos): describe la funcionalidad` o `feat(api): agrega el endpoint de lista`).
 4. Los documentos de `docs/` van **antes** que el código: el primer commit de código debe ser posterior al commit de documentación.
 5. Abra un **Pull Request hacia el `main` de su propio fork** (no hacia el repositorio original), con una descripción de lo hecho y el checklist de `docs/definition-of-done.md` marcado.
-6. Pegue el **enlace del PR** en la actividad de Moodle (texto en línea) antes del cierre: sábado 10 de octubre de 2026, 11:59 p. m.
+6. Pegue el **enlace del PR** en la actividad de Moodle (texto en línea) antes del cierre: lunes 12 de octubre de 2026, 11:59 p. m.
 
 ## Qué se evalúa (5,0)
 
@@ -71,19 +73,19 @@ Validación: `name` obligatorio (máximo 60 caracteres), `price` número mayor q
 ## Estructura
 
 ```text
-docs/                         plantillas del framework (se copian y se llenan)
+docs/                         documentación escrita antes del código, a partir de las plantillas del framework
   features/ screens/ decisions/ api/ definition-of-done.md
-kotlin/Product.kt             ejercicio Kotlin (esqueleto)
+kotlin/Product.kt             ejercicio Kotlin: clase Product, stockLabel y applyDiscount
 server/
-  app.js                      createApp(): rutas de la API (stubs 501) + piezas ya dadas
+  app.js                      createApp(): las cinco rutas de la API con validación + piezas ya dadas
   index.js                    arranque en el puerto 3000
   data/products.json          8 productos semilla
 src/app/                      arranque, rutas y tema
 src/features/products/        funcionalidad organizada por capas del framework
   data/                       config.ts (API_URL), api-error.ts (ApiError), products-api.ts (cliente fetch)
   domain/product.ts           tipos, formatCOP (dado), validateProduct, toProductView, filterProducts
-  presentation/               páginas, EmptyState (dado, modelo de props tipadas) y ProductCard
-  __tests__/                  test-server.ts (helper dado), pruebas de ejemplo y espacio para las suyas
+  presentation/               páginas (lista, detalle, formulario), EmptyState (dado) y ProductCard
+  __tests__/                  test-server.ts (helper dado) y pruebas unitarias y de la API
 ```
 
 Capas (framework, `01-architecture/layers-and-state`): `presentation` depende de `domain` y de `data`; `data` depende de `domain`; `domain` no depende de nada. El estado de cada pantalla puede vivir en la misma página con `useState` y `useEffect`.
@@ -98,9 +100,13 @@ Para concentrar el parcial en lo trabajado en clase, algunas piezas vienen hecha
 - **Presentación:** `EmptyState` como modelo de componente con props tipadas; el esqueleto de la lista (carga con `useEffect` e `IonItem`/`IonLabel`) y el campo `IonInput` del formulario.
 - **Pruebas:** el helper `startTestServer()` y un ejemplo de prueba de la API.
 
-## Entrega: secciones de este README
+## State management decision
 
-Al terminar, agregue aquí abajo las dos secciones escritas en inglés (3 a 5 frases cada una) que indica la Parte 7 de [TODO.md](./TODO.md): **State management decision** y **API error handling**. También actualice este README con cualquier paso adicional necesario para ejecutar su versión.
+I chose local component state with `useState` and `useEffect` in each page instead of a global store. The app has a single resource and no data shared between screens, so every page loads what it needs from the API and keeps its own loading, error and form values. This keeps each screen easy to read and needs no extra libraries, while the rules for validating, formatting and filtering live in pure functions in the domain layer, so they can be tested without rendering anything. If the app grew and several screens needed the same data, I would move the loading logic into shared hooks or add a store or a request-cache library (see ADR-001).
+
+## API error handling
+
+The API answers every error with the same JSON shape, `{ error, details }`: 400 for invalid data or a non-numeric id, and 404 when a product does not exist. Unknown routes reach a 404 handler, and any unexpected exception reaches a central error handler that logs it and returns a generic 500, and the tests check the 404 cases. On the client, `request()` throws an `ApiError`: if `fetch` fails the API never answered, so `status` is `null` and `isNetworkError` is true, and if the response is not ok the error carries the status code and the server's `details`. The pages use `getErrorMessage` to turn an `ApiError` into a clear message, such as "No fue posible conectar con el servidor" for a network error or "No encontramos ese producto." for a 404. The list and detail screens offer a "Reintentar" button, and the form shows the server's messages when it rejects the data.
 
 ---
 
